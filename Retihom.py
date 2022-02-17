@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands, tasks
 from yt_dlp import YoutubeDL
 import requests
+import numpy as np
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -27,7 +28,7 @@ async def join(ctx):
     await channel.connect()
 
 
-@bot.command(name='leave', help='To make the bot leave the voice channel')
+@bot.command(name='leave', help='Bot leave the voice channel')
 async def leave(ctx):
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_connected():
@@ -83,7 +84,7 @@ async def play_queue(arg, voice):
     voice.play(discord.FFmpegPCMAudio(url, **FFMPEG_OPTS))
 
 
-@bot.command(name='pause', help='This command pauses the song')
+@bot.command(name='pause', help='Pauses the song')
 async def pause(ctx):
     voice_client = ctx.message.guild.voice_client
     if voice_client.is_playing():
@@ -128,14 +129,14 @@ async def queue(ctx):
 
 
 # Clear the queue
-@bot.command(name='clear_queue', help='Clear the queue')
+@bot.command(name='clear_queue', help='Clears the queue')
 async def clear_queue(ctx):
     bot.queue = []
     await ctx.send("Queue cleared!")
 
 
 # Remove song from queue
-@bot.command(name='remove_from_queue', help='Remove song from queue')
+@bot.command(name='remove_from_queue', help='Removes song from queue')
 async def remove_from_queue(ctx, *, arg):
     # See if arg is actually an integer
     try:
@@ -156,6 +157,57 @@ async def remove_from_queue(ctx, *, arg):
             bot.queue.pop(arg - 1)
         else:
             await ctx.send("Argument should not be bigger than queue length")
+
+# TODO: tons of edge cases I havent added errors for here, should do that
+@bot.command(name='define', help='Define a word using google dictionary')
+async def define(ctx, * arg):
+    # Creating the query from the argument
+    query = ""
+    print_query = ""
+    for word in arg:
+        query += word
+        query += "%20"
+        print_query += word
+        print_query += " "
+    # Removing the last empty space/%20 from both
+    print_query = print_query[0:-1]
+    query = query[0:-3]
+
+
+    # Getting the data from https://dictionaryapi.dev/
+    try:
+        r = requests.get(f"https://api.dictionaryapi.dev/api/v2/entries/en/{query}")
+        r.raise_for_status()
+    # TODO: make this not a generic except
+    except:
+        await ctx.send(f"An error has occurred, are you sure that is a proper search query?")
+        return
+
+    data = r.json()[0]
+
+    # Seeing if there is a definition, if so post it
+    if data['meanings']:
+        meanings = data['meanings'][0]
+        if meanings['definitions']:
+            definition = meanings['definitions'][0]
+
+            await ctx.send(f"**{print_query}**: {definition['definition']}")
+
+
+@bot.command(name='roll', help='Roll a dice with x sides y times, by default x=6, y=1. Usage: !roll [x] [y]')
+async def roll(ctx, sides=6, times=1):
+    numbers = np.random.randint(1, sides+1, times)
+    text = ""
+    for n in numbers:
+        text += str(n)
+        text += " "
+    # Removing the final space
+    text = text[0:-1]
+    if len(text) <= 2000:
+        await ctx.send(text)
+    else:
+        await ctx.send("Maximum message size reached, please reduce either the number of sides or the number of times")
+
 
 
 # Check if there is no music playing and if so play the next song in the queue
