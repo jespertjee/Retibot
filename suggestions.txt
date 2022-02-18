@@ -1,0 +1,5 @@
+Thymos - Can you make it sort the key by numerical value instead of alphabetical order? - See https://www.statology.org/matplotlib-legend-order/
+Ald - can you make the x axis the actual date please pretty please - probably add this as an option instead of always
+Ald - and can i request strings rather than individual words. like "thank you" vs "thank" "you"
+Ald - number of unique words typed by user or the whole server (vocab)
+Jesper - Noramlise for amount of messages

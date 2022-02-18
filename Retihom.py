@@ -5,6 +5,7 @@ from discord.ext import commands, tasks
 from yt_dlp import YoutubeDL
 import requests
 import numpy as np
+import data_analysis
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -40,6 +41,9 @@ async def leave(ctx):
 # Play songs
 @bot.command(name='play', help='To play song')
 async def play(ctx, *, arg):
+    if not ctx.message.author.voice:
+        ctx.send(f"{ctx.message.author.name} is not connected to a voice channel")
+        return
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
 
     # Context of the current interaction
@@ -207,6 +211,24 @@ async def roll(ctx, sides=6, times=1):
         await ctx.send(text)
     else:
         await ctx.send("Maximum message size reached, please reduce either the number of sides or the number of times")
+
+
+@bot.command(name='plot', help='Plot data from this server. Usage: !plot [x] [y] where x is the choice of plot, 1 for'
+                               'total messages, 2 for total words, 3 for filtered words. If option 3 has been chosen'
+                               'then [y] must be given which should just be a sequence of words')
+async def plot(ctx, choice, *, filterwords=None):
+    # TODO: add checks on values of choice and filterwords.
+    # Splitting up the filterwords and making it a list
+    if filterwords:
+        if choice != '3':
+            await ctx.send(f"Can't use filterwords with option {choice}")
+            return
+        words = filterwords.split()
+        data_analysis.analyse(int(choice), words)
+    else:
+        data_analysis.analyse(int(choice), filterwords)
+
+    await ctx.send(file=discord.File('plot.png'))
 
 
 
