@@ -226,7 +226,7 @@ async def plot(ctx, choice, *, filterwords=None):
         words = filterwords.split()
         data_analysis.analyse(int(choice), words)
     else:
-        data_analysis.analyse(int(choice), filterwords)
+        data_analysis.analyse(int(choice))
 
     await ctx.send(file=discord.File('plot.png'))
 
