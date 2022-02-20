@@ -23,6 +23,47 @@ def extract_data():
     return filedata, names
 
 
+def get_filter_word_count(filedata, filterword_query):
+    """"
+    Function to get the absolute count of the filtered words in a pandas dataframe
+    """
+    filedata['filter_count'] = filedata['Content'].str.count(filterword_query, flags=re.IGNORECASE)
+
+    data = filedata[["Author", "filter_count", "Delta_day"]]
+
+    # Getting number of messages in chat
+    data = data.groupby(['Author', 'Delta_day']).sum()
+
+    # Unstacking data and filling in the NaNs, this is done so we can do the cumsum later
+    data = data.unstack(0)
+    data = data.fillna(0)
+
+    # Cumulative summing
+    data = data.cumsum()
+
+    return data
+
+
+def get_total_words(filedata):
+    """"
+    Function to get total words over time in a pandas dataframe
+    """
+    filedata['word_number'] = filedata['Content'].str.split().str.len()
+
+    data = filedata[["Author", "word_number", "Delta_day"]]
+
+    # Getting number of messages in chat
+    data = data.groupby(['Author', 'Delta_day']).sum()
+
+    # Unstacking data and filling in the NaNs, this is done so we can do the cumsum later
+    data = data.unstack(0)
+    data = data.fillna(0)
+
+    # Cumulative summing
+    data = data.cumsum()
+    return data
+
+
 def plot_messages(filedata, names):
     # Getting number of messages in chat
     data = filedata.groupby(['Author', 'Delta_day']).size()
@@ -34,7 +75,7 @@ def plot_messages(filedata, names):
     # Cumulative summing
     data = data.cumsum()
 
-    fig = figure(figsize=(10,10))
+    fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
     for name in names:
         number = str(int(data[name][-1]))
@@ -51,21 +92,9 @@ def plot_messages(filedata, names):
 
 
 def plot_words(filedata):
-    filedata['word_number'] = filedata['Content'].str.split().str.len()
+    data = get_total_words(filedata)
 
-    data = filedata[["Author", "word_number", "Delta_day"]]
-
-    # Getting number of messages in chat
-    data = data.groupby(['Author', 'Delta_day']).sum()
-
-    # Unstacking data and filling in the NaNs, this is done so we can do the cumsum later
-    data = data.unstack(0)
-    data = data.fillna(0)
-
-    # Cumulative summing
-    data = data.cumsum()
-
-    fig = figure(figsize=(10,10))
+    fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
     for column in data.columns:
         number = str(int(data[column][-1]))
@@ -82,21 +111,9 @@ def plot_words(filedata):
 
 # TODO: process (custom) emoji's into words first so they can be processed properly
 def plot_filter_words(filedata, filterwords, filterword_query):
-    filedata['filter_count'] = filedata['Content'].str.count(filterword_query, flags=re.IGNORECASE)
+    data = get_filter_word_count(filedata, filterword_query)
 
-    data = filedata[["Author", "filter_count", "Delta_day"]]
-
-    # Getting number of messages in chat
-    data = data.groupby(['Author', 'Delta_day']).sum()
-
-    # Unstacking data and filling in the NaNs, this is done so we can do the cumsum later
-    data = data.unstack(0)
-    data = data.fillna(0)
-
-    # Cumulative summing
-    data = data.cumsum()
-
-    fig = figure(figsize=(10,10))
+    fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
     for column in data.columns:
         number = str(int(data[column][-1]))
@@ -104,7 +121,7 @@ def plot_filter_words(filedata, filterwords, filterword_query):
     frame.set_ylim(bottom=0)
     frame.set_xlim(left=0)
     frame.grid()
-    frame.set_ylabel("Words")
+    frame.set_ylabel("Word count")
     frame.set_xlabel("Days since " + filedata['Date'][0].strftime("%d/%m/%Y"))
 
     fig.legend(loc=2)
@@ -112,11 +129,46 @@ def plot_filter_words(filedata, filterwords, filterword_query):
     fig.savefig("plot.png")
 
 
+def plot_relative_filter_words(filedata, filterwords, filterword_query):
+    # Getting filtered words and total words so we can divide them
+    filterdata = get_filter_word_count(filedata, filterword_query)['filter_count']
+    worddata = get_total_words(filedata)['word_number']
+
+    # Dividing them and changing na's into 0's (since we divided by 0 a bunch of times)
+    fraction = filterdata.divide(worddata)
+    fraction = fraction.fillna(0)
+
+    fig = figure(figsize=(20, 10))
+    frame = fig.add_subplot(1, 1, 1)
+
+    sortednames = fraction.iloc[-1].sort_values(0, ascending=False).index
+    for name in sortednames:
+        # Transforming values to log, except if they are 0
+        number = float(fraction[name][-1])
+        # Check if number is equal to 0
+        if number == 0:
+            frame.plot(range(fraction.index.size), fraction[name],label=(name + r': final fraction: 0'))
+        else:
+            lognumber = str(round(np.log10(number), 2))
+            text = name + r' Final fraction: $10^{' + lognumber + r'}$'
+            frame.plot(range(fraction.index.size), fraction[name], label=text)
+    frame.set_yscale('log')
+    frame.set_xlim(left=0)
+    frame.grid()
+    frame.set_ylabel("Fraction of words")
+    frame.set_xlabel("Days since " + filedata['Date'][0].strftime("%d/%m/%Y"))
+
+    fig.legend(loc=2)
+    fig.suptitle('Data for filtered words: ' + str(filterwords))
+    fig.subplots_adjust(left=0.25)
+    fig.savefig("plot.png")
+
+
 def analyse(choice, filterwords = None):
     filedata, names = extract_data()
 
     # Retrieving filter words
-    if choice == 3:
+    if choice == 3 or 4:
         # We have to make the filterwords into a query for pandas count to undertand using '|'s
         if len(filterwords)==1:
             filterword_query = filterwords[0]
@@ -131,6 +183,8 @@ def analyse(choice, filterwords = None):
         plot_words(filedata)
     elif choice == 3:
         plot_filter_words(filedata, filterwords, filterword_query)
+    elif choice == 4:
+        plot_relative_filter_words(filedata, filterwords, filterword_query)
 
 
 if __name__ == "__main__":

@@ -220,7 +220,7 @@ async def plot(ctx, choice, *, filterwords=None):
     # TODO: add checks on values of choice and filterwords.
     # Splitting up the filterwords and making it a list
     if filterwords:
-        if choice != '3':
+        if choice == 1 or choice == 2:
             await ctx.send(f"Can't use filterwords with option {choice}")
             return
         words = filterwords.split()
