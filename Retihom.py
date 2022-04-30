@@ -1,4 +1,6 @@
 import os
+
+import pandas as pd
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands, tasks
@@ -7,6 +9,22 @@ import requests
 import numpy as np
 import data_analysis
 
+# import logging
+#
+# # Logging settings
+# logger = logging.getLogger(__name__)
+#
+# # Setting up the handler
+# f_handler = logging.FileHandler('info.log')
+# f_handler.setLevel(logging.INFO)
+#
+# # Setting up the formatter
+# f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# f_handler.setFormatter(f_format)
+#
+# logger.addHandler(f_handler)
+
+# Generic bot settings
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
@@ -16,7 +34,6 @@ prefix = '!'
 
 bot = commands.Bot(command_prefix=prefix)
 bot.queue = []
-
 
 # Music bot part!
 @bot.command(name='join', help='Tells the bot to join the voice channel')
@@ -231,6 +248,25 @@ async def plot(ctx, choice, *, filterwords=None):
     await ctx.send(file=discord.File('plot.png'))
 
 
+@bot.command(name='update_messages', help='updates the internal file with all messages that is mostly used for plotting'
+                                          '')
+async def update_messages(ctx):
+    await ctx.send("Started updating messages")
+
+    author = []
+    date = []
+    content = []
+
+    async for message in ctx.channel.history(limit=None, oldest_first=True):
+        author.append(message.author)
+        date.append(message.created_at.date())
+        content.append(message.content)
+    data = pd.DataFrame(data=np.array([author, date, content]).T, columns=["Author", "Date", "Content"])
+    data.to_csv('data.csv', index=False)
+
+    await ctx.send("Finished updating messages!")
+
+
 
 # Check if there is no music playing and if so play the next song in the queue
 @tasks.loop(seconds=5.0)
@@ -246,7 +282,8 @@ async def check_queue():
                 arg = bot.queue[0]
                 bot.queue.pop(0)
                 await play_queue(arg=arg, voice=voice)
-
+# Bot has started so we can log that
+print("Bot has started!")
 
 check_queue.start()
 bot.run(TOKEN)

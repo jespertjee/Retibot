@@ -3,24 +3,44 @@ from matplotlib.pyplot import figure, show
 import pandas as pd
 import re
 
-def extract_data():
+# Loading the data TODO: there must be a better way to do this instead of just loading it like this
+data = pd.read_csv("Retihom.csv", encoding="utf8")
+
+
+def get_bots(unique_names):
     """"
-    Function to extract data from the file and put it in a nice format
-
-    :returns : transformed data in a pandas dataframe and the all the unique names
+    Function to get o get the list of bots
     """
-    filedata = pd.read_csv("Retihom.csv", encoding="utf8")
 
-    # Converting date column to datetime object
-    filedata['Date'] = pd.to_datetime(filedata['Date'], format='%d-%m-%y')
 
+def add_delta_day(data, column_name: str = 'Date'):
+    """"
+    Function to add the delta day column in the data, which is simply a column with the amount of days since the
+    first date in the column.
+
+    :param data : the pandas dataframe containing all the discord messages
+    :param column_name : the name of the date column, is 'date' by default
+
+    :returns data : modified pandas dataframe with the aforementioned delta_day column
+    """
+    # Converting date column to pandas datetime
+    data[column_name] = pd.to_datetime(data[column_name], format='%d-%m-%y')
     # Adding delta day column necessary for plotting
-    filedata['Delta_day'] = filedata['Date'] - filedata['Date'][0]
+    data['Delta_day'] = data[column_name] - data[column_name][0]
 
-    # Getting all users in the chat
-    names = filedata['Author'].unique()
+    return data
 
-    return filedata, names
+
+def get_unique_names(data, column_name: str = 'Author'):
+    """"
+    Function which returns all the unique names in the chat log, i.e. all the users that were in the chat
+
+    :param data : the pandas dataframe containing all the discord messages
+    :param column_name : the name of the author column, is 'author' by default
+
+    :returns names : all the unique names in the file
+    """
+    return data[column_name].unique()
 
 
 def get_filter_word_count(filedata, filterword_query):
@@ -62,6 +82,13 @@ def get_total_words(filedata):
     # Cumulative summing
     data = data.cumsum()
     return data
+
+
+def plot_general():
+    """"
+    Generic plot function
+    """
+    return
 
 
 def plot_messages(filedata, names):
@@ -109,6 +136,7 @@ def plot_words(filedata):
     fig.suptitle('Data for sum of words')
     fig.savefig("plot.png")
 
+
 # TODO: process (custom) emoji's into words first so they can be processed properly
 def plot_filter_words(filedata, filterwords, filterword_query):
     data = get_filter_word_count(filedata, filterword_query)
@@ -147,7 +175,7 @@ def plot_relative_filter_words(filedata, filterwords, filterword_query):
         number = float(fraction[name][-1])
         # Check if number is equal to 0
         if number == 0:
-            frame.plot(range(fraction.index.size), fraction[name],label=(name + r': final fraction: 0'))
+            frame.plot(range(fraction.index.size), fraction[name], label=(name + r': final fraction: 0'))
         else:
             lognumber = str(round(np.log10(number), 2))
             text = name + r' Final fraction: $10^{' + lognumber + r'}$'
@@ -164,27 +192,27 @@ def plot_relative_filter_words(filedata, filterwords, filterword_query):
     fig.savefig("plot.png")
 
 
-def analyse(choice, filterwords = None):
-    filedata, names = extract_data()
-
-    # Retrieving filter words
-    if choice == 3 or 4:
-        # We have to make the filterwords into a query for pandas count to undertand using '|'s
-        if len(filterwords)==1:
-            filterword_query = filterwords[0]
-        else:
-            filterword_query = filterwords[0]
-            for word in filterwords[1::]:
-                filterword_query += f"|{word}"
+def analyse(choice, filterwords=None):
+    filedata = add_delta_day(data)
+    names = get_unique_names(filedata)
 
     if choice == 1:
         plot_messages(filedata, names)
     elif choice == 2:
         plot_words(filedata)
-    elif choice == 3:
-        plot_filter_words(filedata, filterwords, filterword_query)
-    elif choice == 4:
-        plot_relative_filter_words(filedata, filterwords, filterword_query)
+    elif choice == 3 or 4:
+        # Retrieving filter words by transforming them into a query
+        # We have to make the filterwords into a query for pandas count to understand using '|'s
+        if len(filterwords) == 1:
+            filterword_query = filterwords[0]
+        else:
+            filterword_query = filterwords[0]
+            for word in filterwords[1::]:
+                filterword_query += f"|{word}"
+        if choice == 3:
+            plot_filter_words(filedata, filterwords, filterword_query)
+        elif choice == 4:
+            plot_relative_filter_words(filedata, filterwords, filterword_query)
 
 
 if __name__ == "__main__":
