@@ -49,14 +49,15 @@ class MusicCog(commands.Cog):
 
 
             if not voice.is_playing():
-                length, title, url = info['duration'], info['title'], info['webpage_url']
+                length, title, url, playing_url = info['duration'], info['title'], info['webpage_url'], \
+                                                  info['url']
                 await ctx.send(f"Now playing {title}. Link: {url}")
 
                 # TODO: -reconnect_delay_max 5 doesn't seem to work on pythonanywhere, why?? (If fixed, also fix it in
                 #  the function play_queue
                 # FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_delay_max 5', 'options': '-vn'}
                 FFMPEG_OPTS = {'before_options': '-reconnect 1', 'options': '-vn'}
-                voice.play(discord.FFmpegPCMAudio(url, **FFMPEG_OPTS))
+                voice.play(discord.FFmpegPCMAudio(playing_url, **FFMPEG_OPTS))
 
             else:
                 info['added_by'] = ctx.message.author.name
@@ -68,12 +69,12 @@ class MusicCog(commands.Cog):
 
     # Play songs from the queue
     async def play_queue(self, arg, voice):
-        length, title, url = arg['duration'], arg['title'], arg['url']
+        length, title, url, playing_url = info['duration'], info['title'], info['webpage_url'], info['url']
 
         await self.bot.voicectx.send(f"Now playing {title}. Link: {url}")
 
         FFMPEG_OPTS = {'before_options': '-reconnect 1', 'options': '-vn'}
-        voice.play(discord.FFmpegPCMAudio(url, **FFMPEG_OPTS))
+        voice.play(discord.FFmpegPCMAudio(playing_url, **FFMPEG_OPTS))
 
     @commands.command(name='pause', help='Pauses the song')
     async def pause(self, ctx):
