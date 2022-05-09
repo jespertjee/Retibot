@@ -69,7 +69,7 @@ class MusicCog(commands.Cog):
 
     # Play songs from the queue
     async def play_queue(self, arg, voice):
-        length, title, url, playing_url = info['duration'], info['title'], info['webpage_url'], info['url']
+        length, title, url, playing_url = arg['duration'], arg['title'], arg['webpage_url'], arg['url']
 
         await self.bot.voicectx.send(f"Now playing {title}. Link: {url}")
 
@@ -99,6 +99,10 @@ class MusicCog(commands.Cog):
         voice_client = ctx.message.guild.voice_client
         if voice_client.is_playing():
             voice_client.stop()
+            if len(self.queue)>0:
+                arg = self.queue[0]
+                self.queue.pop(0)
+                await self.play_queue(arg=arg, voice=voice_client)
         else:
             await ctx.send("The bot is not playing anything at the moment.")
 
