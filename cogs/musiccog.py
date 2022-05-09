@@ -94,8 +94,8 @@ class MusicCog(commands.Cog):
         else:
             await ctx.send("The bot was not playing anything before this. Use the !play command")
 
-    @commands.command(name='stop', help='Stops the song')
-    async def stop(self, ctx):
+    @commands.command(name='skip', help='Skips the song')
+    async def skip(self, ctx):
         voice_client = ctx.message.guild.voice_client
         if voice_client.is_playing():
             voice_client.stop()
