@@ -3,6 +3,7 @@ import discord
 import sys
 sys.path.append("..")
 import data_analysis
+import shlex
 
 
 class AnalysisCog(commands.Cog):
@@ -20,7 +21,9 @@ class AnalysisCog(commands.Cog):
             if choice == 1 or choice == 2:
                 await ctx.send(f"Can't use filterwords with option {choice}")
                 return
-            words = filterwords.split()
+            # See
+            # https://stackoverflow.com/questions/79968/split-a-string-by-spaces-preserving-quoted-substrings-in-python
+            words = shlex.split(filterwords)
             data_analysis.analyse(int(choice), words)
         else:
             data_analysis.analyse(int(choice))
@@ -28,5 +31,5 @@ class AnalysisCog(commands.Cog):
         await ctx.send(file=discord.File('plot.png'))
 
 
-def setup(bot):
-    bot.add_cog(AnalysisCog(bot))
+async def setup(bot):
+    await bot.add_cog(AnalysisCog(bot))

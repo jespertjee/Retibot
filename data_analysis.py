@@ -4,6 +4,7 @@ import pandas as pd
 import re
 
 # Loading the data TODO: there must be a better way to do this instead of just loading it like this
+print("loaded Retihom.csv")
 data = pd.read_csv("Retihom.csv", encoding="utf8")
 
 
@@ -24,9 +25,9 @@ def add_delta_day(data, column_name: str = 'Date'):
     :returns data : modified pandas dataframe with the aforementioned delta_day column
     """
     # Converting date column to pandas datetime
-    data[column_name] = pd.to_datetime(data[column_name], format='%d-%m-%y')
+    data[column_name] = pd.to_datetime(data[column_name], format="%d/%m/%Y")
     # Adding delta day column necessary for plotting
-    data['Delta_day'] = data[column_name] - data[column_name][0]
+    data['Delta_day'] = data[column_name] - data[column_name].iloc[0]
 
     return data
 
@@ -91,7 +92,7 @@ def plot_general():
     return
 
 
-def plot_messages(filedata, names):
+def plot_messages(filedata):
     # Getting number of messages in chat
     data = filedata.groupby(['Author', 'Delta_day']).size()
 
@@ -102,11 +103,14 @@ def plot_messages(filedata, names):
     # Cumulative summing
     data = data.cumsum()
 
+
     fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
-    for name in names:
-        number = str(int(data[name][-1]))
-        frame.plot(range(data.index.size), data[name], label=(name + f': {number} messages'))
+
+    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    for column in sortednames:
+        number = str(int(data[column][-1]))
+        frame.plot(range(data.index.size), data[column], label=(column + f': {number} messages'))
     frame.set_ylim(bottom=0)
     frame.set_xlim(left=0)
     frame.grid()
@@ -123,7 +127,9 @@ def plot_words(filedata):
 
     fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
-    for column in data.columns:
+
+    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    for column in sortednames:
         number = str(int(data[column][-1]))
         frame.plot(range(data.index.size), data[column], label=(column[1] + f': {number} words'))
     frame.set_ylim(bottom=0)
@@ -143,9 +149,13 @@ def plot_filter_words(filedata, filterwords, filterword_query):
 
     fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
-    for column in data.columns:
-        number = str(int(data[column][-1]))
-        frame.plot(range(data.index.size), data[column], label=(column[1] + f': {number} times said'))
+
+    # Sorting
+    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    for name in sortednames:
+        number = str(int(data[name][-1]))
+        frame.plot(range(data.index.size), data[name], label=(name[1] + f': {number} times said'))
+
     frame.set_ylim(bottom=0)
     frame.set_xlim(left=0)
     frame.grid()
@@ -197,7 +207,7 @@ def analyse(choice, filterwords=None):
     names = get_unique_names(filedata)
 
     if choice == 1:
-        plot_messages(filedata, names)
+        plot_messages(filedata)
     elif choice == 2:
         plot_words(filedata)
     elif choice == 3 or 4:

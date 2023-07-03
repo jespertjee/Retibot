@@ -1,14 +1,17 @@
 from discord.ext import commands
 import pandas as pd
 import requests
+import numpy as np
+import datetime
+import data_analysis
 
 
 class GeneralCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='update_messages', help='updates the internal file with all messages that is mostly used for plotting'
-                                              '')
+    @commands.command(name='update_messages', help='updates the internal file with all messages that is mostly used '
+                                                   'for plotting')
     async def update_messages(self, ctx):
         await ctx.send("Started updating messages")
 
@@ -16,12 +19,28 @@ class GeneralCog(commands.Cog):
         date = []
         content = []
 
-        async for message in ctx.channel.history(limit=None, oldest_first=True):
+        after_date = datetime.datetime(2023, 7, 1)
+
+        # TODO: currently this just grabs all the messages after a fixed, I
+        #  just need to update them daily, not redo everything
+        async for message in ctx.channel.history(limit=None, oldest_first=True, after=after_date):
             author.append(message.author)
             date.append(message.created_at.date())
             content.append(message.content)
         data = pd.DataFrame(data=np.array([author, date, content]).T, columns=["Author", "Date", "Content"])
-        data.to_csv('data.csv', index=False)
+
+        # Changing the date formatting
+        data['Date'] = pd.to_datetime(data['Date'], format='%Y-%m-%d')
+        print(data['Date'])
+        data['Date'] = data['Date'].dt.strftime("%d/%m/%Y")
+        print(data['Date'])
+
+        # Concatting this data to the data already loaded
+        data = pd.concat([data_analysis.data, data])
+        data.to_csv("Retihom.csv", index=False)
+
+        # updating the original as well
+        data_analysis.data = pd.concat([data_analysis.data, data])
 
         await ctx.send("Finished updating messages!")
 
@@ -77,5 +96,16 @@ class GeneralCog(commands.Cog):
 
 
 
-def setup(bot):
-    bot.add_cog(GeneralCog(bot))
+    @commands.Cog.listener()
+    async def on_message(self, ctx):
+        # Reposting wrong twitter links
+        if 'https://twitter.com/' in ctx.content:
+            text = 'https://vxtwitter.com/' + str(ctx.content[20::])
+            print(text)
+            await ctx.channel.send(text)
+
+
+
+
+async def setup(bot):
+    await bot.add_cog(GeneralCog(bot))

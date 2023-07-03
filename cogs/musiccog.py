@@ -34,6 +34,8 @@ class MusicCog(commands.Cog):
             return
         voice = discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
 
+
+
         # Context of the current interaction
         self.bot.voicectx = ctx
 
@@ -81,7 +83,7 @@ class MusicCog(commands.Cog):
         voice_client = ctx.message.guild.voice_client
         if voice_client.is_playing():
             await ctx.send("Music is paused.")
-            await voice_client.pause()
+            voice_client.pause()
         else:
             await ctx.send("The bot is not playing anything at the moment.")
 
@@ -90,7 +92,7 @@ class MusicCog(commands.Cog):
         voice_client = ctx.message.guild.voice_client
         if voice_client.is_paused():
             await ctx.send("Music is resumed.")
-            await voice_client.resume()
+            voice_client.resume()
         else:
             await ctx.send("The bot was not playing anything before this. Use the !play command")
 
@@ -165,5 +167,5 @@ class MusicCog(commands.Cog):
                     await self.play_queue(arg=arg, voice=voice)
 
 
-def setup(bot):
-    bot.add_cog(MusicCog(bot))
+async def setup(bot):
+    await bot.add_cog(MusicCog(bot))

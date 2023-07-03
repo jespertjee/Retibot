@@ -1,3 +1,5 @@
+import discord
+import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
@@ -6,11 +8,16 @@ import os
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-bot = commands.Bot(command_prefix='!')
+intents = discord.Intents.default()
+intents.message_content = True
 
-bot.load_extension("cogs.musiccog")
-bot.load_extension("cogs.analysiscog")
-bot.load_extension("cogs.generalcog")
+bot = commands.Bot(command_prefix='!', intents=intents)
 
-print("Bot has started!")
-bot.run(TOKEN)
+async def main():
+    async with bot:
+        await bot.load_extension('cogs.musiccog')
+        await bot.load_extension('cogs.analysiscog')
+        await bot.load_extension('cogs.generalcog')
+        await bot.start(TOKEN)
+
+asyncio.run(main())
