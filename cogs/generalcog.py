@@ -1,48 +1,60 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 import pandas as pd
 import requests
 import numpy as np
 import datetime
 import data_analysis
 
+utc = datetime.timezone.utc
+# Updating at 4 AM UTC
+time = datetime.time(hour=19, minute=51, tzinfo=utc)
+
 
 class GeneralCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.update_messages.start()
 
-    @commands.command(name='update_messages', help='updates the internal file with all messages that is mostly used '
-                                                   'for plotting')
-    async def update_messages(self, ctx):
-        await ctx.send("Started updating messages")
+    def cog_unload(self):
+        self.update_messages.cancel()
 
+    # Update messages
+    @tasks.loop(time=time)
+    async def update_messages(self):
         author = []
         date = []
         content = []
 
-        after_date = datetime.datetime(2023, 7, 1)
+        # Reading the last date to use to update the messages
+        last_date = data_analysis.data['Date'].iloc[-1]
+        # Need to use 1 day later, because that is how channel history works
+        after_date = pd.to_datetime(last_date, format="%d/%m/%Y") + datetime.timedelta(days=1)
 
-        # TODO: currently this just grabs all the messages after a fixed, I
-        #  just need to update them daily, not redo everything
-        async for message in ctx.channel.history(limit=None, oldest_first=True, after=after_date):
+        today = datetime.datetime.today().strftime("%d/%m/%Y")
+
+        # TODO: make the channel choice flexible
+        channel = self.bot.get_channel(604694988978126879)
+
+        # Reading messages after the last saved message but before the new date. We should not include too new data,
+        # since else we would extract the wrong date on the next day.
+        async for message in channel.history(limit=None, oldest_first=True, after=after_date, before=today):
             author.append(message.author)
             date.append(message.created_at.date())
+            print(message.content, message.created_at.date())
             content.append(message.content)
+        print(1)
         data = pd.DataFrame(data=np.array([author, date, content]).T, columns=["Author", "Date", "Content"])
 
         # Changing the date formatting
         data['Date'] = pd.to_datetime(data['Date'], format='%Y-%m-%d')
-        print(data['Date'])
         data['Date'] = data['Date'].dt.strftime("%d/%m/%Y")
-        print(data['Date'])
 
         # Concatting this data to the data already loaded
         data = pd.concat([data_analysis.data, data])
-        data.to_csv("Retihom.csv", index=False)
+        #data.to_csv("Retihom.csv", index=False)
 
-        # updating the original as well
-        data_analysis.data = pd.concat([data_analysis.data, data])
-
-        await ctx.send("Finished updating messages!")
+        # Reloading the analysis cog such that the new data gets loaded
+        #await bot.reload_extension("analysiscog")
 
     # TODO: tons of edge cases I havent added errors for here, should do that
     @commands.command(name='define', help='Define a word using google dictionary')

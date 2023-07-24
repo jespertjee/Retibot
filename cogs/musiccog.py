@@ -6,6 +6,7 @@ import requests
 
 class MusicCog(commands.Cog):
     def __init__(self, bot):
+        self.check_queue.start()
         self.bot = bot
         self.queue = []
 
@@ -15,8 +16,8 @@ class MusicCog(commands.Cog):
             await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
             return
         else:
-            channel = ctx.message.author.voice.channel
-        await channel.connect()
+            channel = ctx.author.voice.channel
+            await channel.connect()
 
     @commands.command(name='leave', help='Bot leave the voice channel')
     async def leave(self, ctx):
