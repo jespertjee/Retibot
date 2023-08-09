@@ -4,10 +4,11 @@ import requests
 import numpy as np
 import datetime
 import data_analysis
+import importlib
 
 utc = datetime.timezone.utc
-# Updating at 4 AM UTC
-time = datetime.time(hour=19, minute=51, tzinfo=utc)
+# Updating at 1 AM UTC
+time = datetime.time(hour=1, minute=0, tzinfo=utc)
 
 
 class GeneralCog(commands.Cog):
@@ -30,19 +31,19 @@ class GeneralCog(commands.Cog):
         # Need to use 1 day later, because that is how channel history works
         after_date = pd.to_datetime(last_date, format="%d/%m/%Y") + datetime.timedelta(days=1)
 
-        today = datetime.datetime.today().strftime("%d/%m/%Y")
-
+        today = pd.to_datetime(datetime.date.today(), format="%Y-%m-%d").to_pydatetime()
+        
         # TODO: make the channel choice flexible
         channel = self.bot.get_channel(604694988978126879)
 
+        
+        await channel.send("Updating messages")
         # Reading messages after the last saved message but before the new date. We should not include too new data,
         # since else we would extract the wrong date on the next day.
         async for message in channel.history(limit=None, oldest_first=True, after=after_date, before=today):
             author.append(message.author)
             date.append(message.created_at.date())
-            print(message.content, message.created_at.date())
             content.append(message.content)
-        print(1)
         data = pd.DataFrame(data=np.array([author, date, content]).T, columns=["Author", "Date", "Content"])
 
         # Changing the date formatting
@@ -51,10 +52,13 @@ class GeneralCog(commands.Cog):
 
         # Concatting this data to the data already loaded
         data = pd.concat([data_analysis.data, data])
-        #data.to_csv("Retihom.csv", index=False)
+
+        data.to_csv("Retihom.csv", index=False)
 
         # Reloading the analysis cog such that the new data gets loaded
-        #await bot.reload_extension("analysiscog")
+        importlib.reload(data_analysis)
+
+        await channel.send("Finished updating messages")
 
     # TODO: tons of edge cases I havent added errors for here, should do that
     @commands.command(name='define', help='Define a word using google dictionary')
@@ -107,7 +111,7 @@ class GeneralCog(commands.Cog):
 
 
 
-
+    """
     @commands.Cog.listener()
     async def on_message(self, ctx):
         # Reposting wrong twitter links
@@ -115,6 +119,7 @@ class GeneralCog(commands.Cog):
             text = 'https://vxtwitter.com/' + str(ctx.content[20::])
             print(text)
             await ctx.channel.send(text)
+    """
 
 
 

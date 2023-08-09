@@ -4,8 +4,8 @@ import pandas as pd
 import re
 
 # Loading the data TODO: there must be a better way to do this instead of just loading it like this
-print("loaded Retihom.csv")
 data = pd.read_csv("Retihom.csv", encoding="utf8")
+print("loaded Retihom.csv")
 
 
 def get_bots(unique_names):
