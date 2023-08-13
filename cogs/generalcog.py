@@ -7,8 +7,8 @@ import data_analysis
 import importlib
 
 utc = datetime.timezone.utc
-# Updating at 1 AM UTC
-time = datetime.time(hour=1, minute=0, tzinfo=utc)
+# Updating at 3 AM UTC
+time = datetime.time(hour=3, minute=0, tzinfo=utc)
 
 
 class GeneralCog(commands.Cog):
@@ -51,7 +51,7 @@ class GeneralCog(commands.Cog):
         data['Date'] = data['Date'].dt.strftime("%d/%m/%Y")
 
         # Concatting this data to the data already loaded
-        data = pd.concat([data_analysis.data, data])
+        data = pd.concat([data_analysis.data_original, data])
 
         data.to_csv("Retihom.csv", index=False)
 

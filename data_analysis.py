@@ -4,8 +4,11 @@ import pandas as pd
 import re
 
 # Loading the data TODO: there must be a better way to do this instead of just loading it like this
-data = pd.read_csv("Retihom.csv", encoding="utf8")
 print("loaded Retihom.csv")
+data_original = pd.read_csv("Retihom.csv", encoding="utf8")
+# This data we will append stuff to
+# TODO: do this nicer by instead changing the names in the rest of the file (or copying it there)
+data = data_original.copy()
 
 
 def get_bots(unique_names):
