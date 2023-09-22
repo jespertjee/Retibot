@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib.pyplot import figure, show
 import pandas as pd
 import re
+import datetime
 
 # Loading the data TODO: there must be a better way to do this instead of just loading it like this
 print("loaded Retihom.csv")
@@ -111,14 +112,16 @@ def plot_messages(filedata):
     frame = fig.add_subplot(1, 1, 1)
 
     sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    # Days for plotting on the x-axis
+    days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
+            range(data.index.size)]
     for column in sortednames:
         number = str(int(data[column][-1]))
-        frame.plot(range(data.index.size), data[column], label=(column + f': {number} messages'))
+        frame.plot(days, data[column], label=(column + f': {number} messages'))
     frame.set_ylim(bottom=0)
-    frame.set_xlim(left=0)
     frame.grid()
     frame.set_ylabel("Messages")
-    frame.set_xlabel("Days since " + filedata['Date'][0].strftime("%d/%m/%Y"))
+    frame.set_xlabel("Date")
 
     fig.legend(loc=2)
     fig.suptitle('Data for sum of messages')
@@ -132,14 +135,16 @@ def plot_words(filedata):
     frame = fig.add_subplot(1, 1, 1)
 
     sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    # Days for plotting on the x-axis
+    days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
+            range(data.index.size)]
     for column in sortednames:
         number = str(int(data[column][-1]))
-        frame.plot(range(data.index.size), data[column], label=(column[1] + f': {number} words'))
+        frame.plot(days, data[column], label=(column[1] + f': {number} words'))
     frame.set_ylim(bottom=0)
-    frame.set_xlim(left=0)
     frame.grid()
     frame.set_ylabel("Words")
-    frame.set_xlabel("Days since " + filedata['Date'][0].strftime("%d/%m/%Y"))
+    frame.set_xlabel("Date")
 
     fig.legend(loc=2)
     fig.suptitle('Data for sum of words')
@@ -155,15 +160,17 @@ def plot_filter_words(filedata, filterwords, filterword_query):
 
     # Sorting
     sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    # Days for plotting on the x-axis
+    days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
+            range(data.index.size)]
     for name in sortednames:
         number = str(int(data[name][-1]))
-        frame.plot(range(data.index.size), data[name], label=(name[1] + f': {number} times said'))
+        frame.plot(days, data[name], label=(name[1] + f': {number} times said'))
 
     frame.set_ylim(bottom=0)
-    frame.set_xlim(left=0)
     frame.grid()
     frame.set_ylabel("Word count")
-    frame.set_xlabel("Days since " + filedata['Date'][0].strftime("%d/%m/%Y"))
+    frame.set_xlabel("Date")
 
     fig.legend(loc=2)
     fig.suptitle('Data for filtered words: ' + str(filterwords))
@@ -183,21 +190,24 @@ def plot_relative_filter_words(filedata, filterwords, filterword_query):
     frame = fig.add_subplot(1, 1, 1)
 
     sortednames = fraction.iloc[-1].sort_values(0, ascending=False).index
+
+    # Days for plotting on the x-axis
+    days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
+            range(fraction.index.size)]
     for name in sortednames:
         # Transforming values to log, except if they are 0
         number = float(fraction[name][-1])
         # Check if number is equal to 0
         if number == 0:
-            frame.plot(range(fraction.index.size), fraction[name], label=(name + r': final fraction: 0'))
+            frame.plot(days, fraction[name], label=(name + r': final fraction: 0'))
         else:
             lognumber = str(round(np.log10(number), 2))
             text = name + r' Final fraction: $10^{' + lognumber + r'}$'
-            frame.plot(range(fraction.index.size), fraction[name], label=text)
+            frame.plot(days, fraction[name], label=text)
     frame.set_yscale('log')
-    frame.set_xlim(left=0)
     frame.grid()
     frame.set_ylabel("Fraction of words")
-    frame.set_xlabel("Days since " + filedata['Date'][0].strftime("%d/%m/%Y"))
+    frame.set_xlabel("Date")
 
     fig.legend(loc=2)
     fig.suptitle('Data for filtered words: ' + str(filterwords))
