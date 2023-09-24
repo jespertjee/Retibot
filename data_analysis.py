@@ -254,10 +254,7 @@ def plot_relative_filter_words_week(filedata, filterwords, filterword_query):
 
     # Dividing them and changing na's into 0's (since we divided by 0 a bunch of times)
     fraction = data.divide(worddata)
-
-    # Replacing 0s by nans
-    # TODO: these 0s must be coming from somewhere, solve at the root!
-    fraction[fraction==0] = np.nan
+    fraction = fraction.fillna(0)
 
     fig = figure(figsize=(20, 10))
     frame = fig.add_subplot(1, 1, 1)
@@ -268,10 +265,8 @@ def plot_relative_filter_words_week(filedata, filterwords, filterword_query):
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(fraction.index.size)]
     for name in sortednames:
-        # You need to have at least said the word 5 times to be added in the graph
-        if sum(~fraction[name].isna()) > 5*rolling_window_days:
-            frame.plot(days, fraction[name], label=name[1])
-    frame.set_yscale('log')
+        frame.plot(days, fraction[name], label=name[1])
+    #frame.set_yscale('log')
     frame.grid()
     frame.set_ylabel("Fraction of words")
     frame.set_xlabel("Date")
