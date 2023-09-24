@@ -12,7 +12,10 @@ class AnalysisCog(commands.Cog):
 
     @commands.command(name='plot',
                  help='Plot data from this server. Usage: !plot [x] [y] where x is the choice of plot, 1 for'
-                      'total messages, 2 for total words, 3 for filtered words. If option 3 has been chosen'
+                      'total messages, 2 for total words, 3 for filtered words, 4 for filtered word fraction, 5 for '
+                      'rolling sum of filtered words and 6 for rolling fraction of filtered words. If option 3, 4, 5 '
+                      'or 6 '
+                      'has been chosen'
                       'then [y] must be given which should just be a sequence of words')
     async def plot(self, ctx, choice, *, filterwords=None):
         # TODO: add checks on values of choice and filterwords.

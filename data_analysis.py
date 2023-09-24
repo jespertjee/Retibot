@@ -4,6 +4,10 @@ import pandas as pd
 import re
 import datetime
 
+# Variables
+# How many days the rolling windows should be
+rolling_window_days = 90
+
 # Loading the data TODO: there must be a better way to do this instead of just loading it like this
 print("loaded Retihom.csv")
 data_original = pd.read_csv("Retihom.csv", encoding="utf8")
@@ -46,7 +50,6 @@ def get_unique_names(data, column_name: str = 'Author'):
     :returns names : all the unique names in the file
     """
     return data[column_name].unique()
-
 
 def get_filter_word_count(filedata, filterword_query):
     """"
@@ -215,6 +218,104 @@ def plot_relative_filter_words(filedata, filterwords, filterword_query):
     fig.savefig("plot.png")
 
 
+def get_total_words_rolling(filedata):
+    """"
+    Function to get total words over a rolling week
+    """
+    filedata['word_number'] = filedata['Content'].str.split().str.len()
+
+    data = filedata[["Author", "word_number", "Delta_day"]]
+
+    # Getting number of messages in chat
+    data = data.groupby(['Author', 'Delta_day']).sum()
+
+    # Unstacking data and filling in the NaNs
+    data = data.unstack(0)
+    data = data.fillna(0)
+
+    # Cumulative summing
+    data = data.rolling(f'{rolling_window_days}d').sum()
+    return data
+
+def plot_relative_filter_words_week(filedata, filterwords, filterword_query):
+    # Getting the frequency of words
+    filedata['filter_count'] = filedata['Content'].str.count(filterword_query, flags=re.IGNORECASE)
+
+    data = filedata[["Author", "filter_count", "Delta_day"]]
+
+    # Getting number of messages per day
+    data = data.groupby(['Author', 'Delta_day']).sum()
+
+    # Unstacking such that we have data for each day
+    data = data.unstack(0)
+
+    data = data.rolling(f'{rolling_window_days}d').sum()
+    worddata = get_total_words_rolling(filedata)['word_number']
+
+    # Dividing them and changing na's into 0's (since we divided by 0 a bunch of times)
+    fraction = data.divide(worddata)
+
+    # Replacing 0s by nans
+    # TODO: these 0s must be coming from somewhere, solve at the root!
+    fraction[fraction==0] = np.nan
+
+    fig = figure(figsize=(20, 10))
+    frame = fig.add_subplot(1, 1, 1)
+
+    sortednames = fraction.iloc[-1].sort_values(0, ascending=False).index
+
+    # Days for plotting on the x-axis
+    days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
+            range(fraction.index.size)]
+    for name in sortednames:
+        # You need to have at least said the word 5 times to be added in the graph
+        if sum(~fraction[name].isna()) > 5*rolling_window_days:
+            frame.plot(days, fraction[name], label=name[1])
+    frame.set_yscale('log')
+    frame.grid()
+    frame.set_ylabel("Fraction of words")
+    frame.set_xlabel("Date")
+
+    fig.legend(loc=2)
+    fig.suptitle(f'{rolling_window_days} day rolling fraction for filtered words: ' + str(filterwords))
+    fig.subplots_adjust(left=0.25)
+    fig.savefig("plot.png")
+
+
+def plot_absolute_filter_words_week(filedata, filterwords, filterword_query):
+    # Getting the frequency of words
+    filedata['filter_count'] = filedata['Content'].str.count(filterword_query, flags=re.IGNORECASE)
+
+    data = filedata[["Author", "filter_count", "Delta_day"]]
+
+    # Getting number of messages per day
+    data = data.groupby(['Author', 'Delta_day']).sum()
+
+    # Unstacking such that we have data for each day
+    data = data.unstack(0)
+
+    data = data.rolling(f'{rolling_window_days}d').sum()
+
+    fig = figure(figsize=(20, 10))
+    frame = fig.add_subplot(1, 1, 1)
+
+    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+
+    # Days for plotting on the x-axis
+    days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
+            range(data.index.size)]
+    for name in sortednames:
+        frame.plot(days, data[name], label=name[1])
+    frame.grid()
+    frame.set_ylabel("Count of words")
+    frame.set_xlabel("Date")
+
+    fig.legend(loc=2)
+    fig.suptitle(f'{rolling_window_days} day rolling count for filtered words: ' + str(filterwords))
+    fig.subplots_adjust(left=0.25)
+    fig.savefig("plot.png")
+
+
 def analyse(choice, filterwords=None):
     filedata = add_delta_day(data)
     names = get_unique_names(filedata)
@@ -223,7 +324,7 @@ def analyse(choice, filterwords=None):
         plot_messages(filedata)
     elif choice == 2:
         plot_words(filedata)
-    elif choice == 3 or 4:
+    else:
         # Retrieving filter words by transforming them into a query
         # We have to make the filterwords into a query for pandas count to understand using '|'s
         if len(filterwords) == 1:
@@ -236,6 +337,10 @@ def analyse(choice, filterwords=None):
             plot_filter_words(filedata, filterwords, filterword_query)
         elif choice == 4:
             plot_relative_filter_words(filedata, filterwords, filterword_query)
+        elif choice == 6:
+            plot_relative_filter_words_week(filedata, filterwords, filterword_query)
+        elif choice == 5:
+            plot_absolute_filter_words_week(filedata, filterwords, filterword_query)
 
 
 if __name__ == "__main__":
