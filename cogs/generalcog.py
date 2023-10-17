@@ -111,15 +111,19 @@ class GeneralCog(commands.Cog):
 
 
 
-    """
+
     @commands.Cog.listener()
     async def on_message(self, ctx):
         # Reposting wrong twitter links
-        if 'https://twitter.com/' in ctx.content:
-            text = 'https://vxtwitter.com/' + str(ctx.content[20::])
-            print(text)
-            await ctx.channel.send(text)
-    """
+        if ctx.embeds:
+            pass
+        else:
+            if 'https://twitter.com/' in ctx.content:
+                text = 'https://vxtwitter.com/' + str(ctx.content[20::])
+                await ctx.channel.send(text)
+            elif 'https://x.com/' in ctx.content:
+                text = 'https://vxtwitter.com/' + str(ctx.content[14::])
+                await ctx.channel.send(text)
 
 
 
