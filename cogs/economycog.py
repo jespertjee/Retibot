@@ -94,6 +94,9 @@ class EconomyCog(commands.Cog):
             await ctx.send("You have already received your 1000 EUR!")
         else:
             self.finances.loc[len(self.finances.index)] = [ctx.author.name, 100000.]
+            # Add placeholder
+            self.stocks.loc[len(self.finances.index)] = [ctx.author.name, "Placeholder",
+                                                         0, 0, 0]
             await ctx.send("100000 EUR has been deposited into your account!")
 
     @commands.command(name='money', help='Display the amount of money you have')
@@ -108,7 +111,7 @@ class EconomyCog(commands.Cog):
         embed = discord.Embed(title="Finances", description="Amount of money held by each person.")
 
         # Getting stock value
-        stock_value =  self.stocks[['Name', 'Total_value']].groupby('Name').sum()
+        stock_value = self.stocks[['Name', 'Total_value']].groupby('Name').sum()
 
         # Adding stock value to personal finances
         sum_stocks_and_money = self.finances.merge(stock_value, on='Name')
