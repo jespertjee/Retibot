@@ -8,7 +8,7 @@ import os
 import logging
 import sys
 
-"""
+
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
 
@@ -17,7 +17,7 @@ handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
-"""
+
 
 
 # Generic bot settings
@@ -34,6 +34,7 @@ async def main():
         await bot.load_extension('cogs.musiccog')
         await bot.load_extension('cogs.analysiscog')
         await bot.load_extension('cogs.generalcog')
+        await bot.load_extension('cogs.economycog')
         await bot.start(TOKEN)
 
 asyncio.run(main())
