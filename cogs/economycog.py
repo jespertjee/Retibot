@@ -27,6 +27,35 @@ class EconomyCog(commands.Cog):
     async def save_all(self):
         self.finances.to_csv('finances.csv', index=False)
 
+        # Also saving historical balances of everyone
+        # Getting stock value
+        stock_value = self.stocks[['Name', 'Total_value']].groupby('Name').sum()
+
+        # Adding stock value to personal finances
+        sum_stocks_and_money = self.finances.merge(stock_value, on='Name')
+        sum_stocks_and_money['Total'] = sum_stocks_and_money['Total_value'] + sum_stocks_and_money['Balance']
+
+        sum_stocks_and_money['Date'] = datetime.datetime.today()
+
+        historical_wealth = pd.read_csv('historical_wealth.csv')
+        historical_wealth = pd.concat(historical_wealth, sum_stocks_and_money[['Date', 'Name', 'Total']])
+        historical_wealth.to_csv('historical_wealth.csv', index=False)
+
+    @commands.command(name='test', help='test')
+    async def test(self, ctx):
+        # Getting stock value
+        stock_value = self.stocks[['Name', 'Total_value']].groupby('Name').sum()
+
+        # Adding stock value to personal finances
+        sum_stocks_and_money = self.finances.merge(stock_value, on='Name')
+        sum_stocks_and_money['Total'] = sum_stocks_and_money['Total_value'] + sum_stocks_and_money['Balance']
+
+        sum_stocks_and_money['Date'] = datetime.datetime.today().strftime('%Y-%m-%d')
+
+        historical_wealth = pd.read_csv('historical_wealth.csv')
+        historical_wealth = pd.concat([historical_wealth, sum_stocks_and_money[['Date', 'Name', 'Total']]])
+        historical_wealth.to_csv('historical_wealth.csv', index=False)
+
     @commands.command(name='currency', help='Currency conversion rate')
     async def currency(self, ctx, *, arg):
         argument = arg.split(' ')
