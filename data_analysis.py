@@ -99,7 +99,7 @@ def plot_general():
     return
 
 
-def plot_messages(filedata):
+def plot_messages(filedata, plot_name):
     # Getting number of messages in chat
     data = filedata.groupby(['Author', 'Delta_day']).size()
 
@@ -128,10 +128,10 @@ def plot_messages(filedata):
 
     fig.legend(loc=2)
     fig.suptitle('Data for sum of messages')
-    fig.savefig("plot.png")
+    fig.savefig(plot_name)
 
 
-def plot_words(filedata):
+def plot_words(filedata, plot_name):
     data = get_total_words(filedata)
 
     fig = figure(figsize=(15, 10))
@@ -151,11 +151,11 @@ def plot_words(filedata):
 
     fig.legend(loc=2)
     fig.suptitle('Data for sum of words')
-    fig.savefig("plot.png")
+    fig.savefig(plot_name)
 
 
 # TODO: process (custom) emoji's into words first so they can be processed properly
-def plot_filter_words(filedata, filterwords, filterword_query):
+def plot_filter_words(filedata, plot_name, filterwords, filterword_query):
     data = get_filter_word_count(filedata, filterword_query)
 
     fig = figure(figsize=(15, 10))
@@ -177,10 +177,10 @@ def plot_filter_words(filedata, filterwords, filterword_query):
 
     fig.legend(loc=2)
     fig.suptitle('Data for filtered words: ' + str(filterwords))
-    fig.savefig("plot.png")
+    fig.savefig(plot_name)
 
 
-def plot_relative_filter_words(filedata, filterwords, filterword_query):
+def plot_relative_filter_words(filedata, plot_name, filterwords, filterword_query):
     # Getting filtered words and total words so we can divide them
     filterdata = get_filter_word_count(filedata, filterword_query)['filter_count']
     worddata = get_total_words(filedata)['word_number']
@@ -215,7 +215,7 @@ def plot_relative_filter_words(filedata, filterwords, filterword_query):
     fig.legend(loc=2)
     fig.suptitle('Data for filtered words: ' + str(filterwords))
     fig.subplots_adjust(left=0.25)
-    fig.savefig("plot.png")
+    fig.savefig(plot_name)
 
 
 def get_total_words_rolling(filedata):
@@ -237,7 +237,8 @@ def get_total_words_rolling(filedata):
     data = data.rolling(f'{rolling_window_days}d').sum()
     return data
 
-def plot_relative_filter_words_week(filedata, filterwords, filterword_query):
+
+def plot_relative_filter_words_week(filedata, plot_name, filterwords, filterword_query):
     # Getting the frequency of words
     filedata['filter_count'] = filedata['Content'].str.count(filterword_query, flags=re.IGNORECASE)
 
@@ -266,7 +267,6 @@ def plot_relative_filter_words_week(filedata, filterwords, filterword_query):
             range(fraction.index.size)]
     for name in sortednames:
         frame.plot(days, fraction[name], label=name[1])
-    #frame.set_yscale('log')
     frame.grid()
     frame.set_ylabel("Fraction of words")
     frame.set_xlabel("Date")
@@ -274,10 +274,10 @@ def plot_relative_filter_words_week(filedata, filterwords, filterword_query):
     fig.legend(loc=2)
     fig.suptitle(f'{rolling_window_days} day rolling fraction for filtered words: ' + str(filterwords))
     fig.subplots_adjust(left=0.25)
-    fig.savefig("plot.png")
+    fig.savefig(plot_name)
 
 
-def plot_absolute_filter_words_week(filedata, filterwords, filterword_query):
+def plot_absolute_filter_words_week(filedata, plot_name, filterwords, filterword_query):
     # Getting the frequency of words
     filedata['filter_count'] = filedata['Content'].str.count(filterword_query, flags=re.IGNORECASE)
 
@@ -308,17 +308,16 @@ def plot_absolute_filter_words_week(filedata, filterwords, filterword_query):
     fig.legend(loc=2)
     fig.suptitle(f'{rolling_window_days} day rolling count for filtered words: ' + str(filterwords))
     fig.subplots_adjust(left=0.25)
-    fig.savefig("plot.png")
+    fig.savefig(plot_name)
 
 
-def analyse(choice, filterwords=None):
+def analyse(choice, plot_name, filterwords=None):
     filedata = add_delta_day(data)
-    names = get_unique_names(filedata)
 
     if choice == 1:
-        plot_messages(filedata)
+        plot_messages(filedata, plot_name)
     elif choice == 2:
-        plot_words(filedata)
+        plot_words(filedata, plot_name)
     else:
         # Retrieving filter words by transforming them into a query
         # We have to make the filterwords into a query for pandas count to understand using '|'s
@@ -329,13 +328,13 @@ def analyse(choice, filterwords=None):
             for word in filterwords[1::]:
                 filterword_query += f"|{word}"
         if choice == 3:
-            plot_filter_words(filedata, filterwords, filterword_query)
+            plot_filter_words(filedata, plot_name, filterwords, filterword_query)
         elif choice == 4:
-            plot_relative_filter_words(filedata, filterwords, filterword_query)
+            plot_relative_filter_words(filedata, plot_name, filterwords, filterword_query)
         elif choice == 6:
-            plot_relative_filter_words_week(filedata, filterwords, filterword_query)
+            plot_relative_filter_words_week(filedata, plot_name, filterwords, filterword_query)
         elif choice == 5:
-            plot_absolute_filter_words_week(filedata, filterwords, filterword_query)
+            plot_absolute_filter_words_week(filedata, plot_name, filterwords, filterword_query)
 
 
 if __name__ == "__main__":
