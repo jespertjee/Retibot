@@ -114,7 +114,8 @@ def plot_messages(filedata, plot_name):
     fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
 
-    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    sortednames = data.iloc[-1].sort_values(ascending=False).index
+
     # Days for plotting on the x-axis
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(data.index.size)]
@@ -137,13 +138,17 @@ def plot_words(filedata, plot_name):
     fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
 
-    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    # Have to reset the columns
+    data = data.transpose().reset_index(level=0, drop=True).transpose()
+
+    sortednames = data.iloc[-1].sort_values(ascending=False).index
+
     # Days for plotting on the x-axis
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(data.index.size)]
     for column in sortednames:
         number = str(int(data[column][-1]))
-        frame.plot(days, data[column], label=(column[1] + f': {number} words'))
+        frame.plot(days, data[column], label=(column + f': {number} words'))
     frame.set_ylim(bottom=0)
     frame.grid()
     frame.set_ylabel("Words")
@@ -161,14 +166,17 @@ def plot_filter_words(filedata, plot_name, filterwords, filterword_query):
     fig = figure(figsize=(15, 10))
     frame = fig.add_subplot(1, 1, 1)
 
-    # Sorting
-    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    # Have to reset the columns
+    data = data.transpose().reset_index(level=0, drop=True).transpose()
+
+    sortednames = data.iloc[-1].sort_values(ascending=False).index
+
     # Days for plotting on the x-axis
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(data.index.size)]
     for name in sortednames:
         number = str(int(data[name][-1]))
-        frame.plot(days, data[name], label=(name[1] + f': {number} times said'))
+        frame.plot(days, data[name], label=(name + f': {number} times said'))
 
     frame.set_ylim(bottom=0)
     frame.grid()
@@ -192,7 +200,7 @@ def plot_relative_filter_words(filedata, plot_name, filterwords, filterword_quer
     fig = figure(figsize=(20, 10))
     frame = fig.add_subplot(1, 1, 1)
 
-    sortednames = fraction.iloc[-1].sort_values(0, ascending=False).index
+    sortednames = fraction.iloc[-1].sort_values(ascending=False).index
 
     # Days for plotting on the x-axis
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
@@ -260,7 +268,7 @@ def plot_relative_filter_words_week(filedata, plot_name, filterwords, filterword
     fig = figure(figsize=(20, 10))
     frame = fig.add_subplot(1, 1, 1)
 
-    sortednames = fraction.iloc[-1].sort_values(0, ascending=False).index
+    sortednames = fraction.iloc[-1].sort_values(ascending=False).index
 
     # Days for plotting on the x-axis
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
@@ -294,7 +302,7 @@ def plot_absolute_filter_words_week(filedata, plot_name, filterwords, filterword
     fig = figure(figsize=(20, 10))
     frame = fig.add_subplot(1, 1, 1)
 
-    sortednames = data.iloc[-1].sort_values(0, ascending=False).index
+    sortednames = data.iloc[-1].sort_values(ascending=False).index
 
     # Days for plotting on the x-axis
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
