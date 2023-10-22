@@ -5,6 +5,7 @@ import numpy as np
 import datetime
 import data_analysis
 import importlib
+import re
 
 utc = datetime.timezone.utc
 # Updating at 3 AM UTC
@@ -118,13 +119,14 @@ class GeneralCog(commands.Cog):
         if ctx.embeds:
             pass
         else:
-            if 'https://twitter.com/' in ctx.content:
-                text = 'https://vxtwitter.com/' + str(ctx.content[20::])
-                await ctx.channel.send(text)
-            elif 'https://x.com/' in ctx.content:
-                text = 'https://vxtwitter.com/' + str(ctx.content[14::])
-                await ctx.channel.send(text)
-
+            message_split = ctx.content.split()
+            for message in message_split:
+                if 'https://twitter.com/' in message:
+                    text = 'https://vxtwitter.com/' + str(message[20::])
+                    await ctx.channel.send(text)
+                elif 'https://x.com/' in message:
+                    text = 'https://vxtwitter.com/' + str(message[14::])
+                    await ctx.channel.send(text)
 
 
 
