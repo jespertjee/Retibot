@@ -34,7 +34,8 @@ async def main():
         await bot.load_extension('cogs.musiccog')
         await bot.load_extension('cogs.analysiscog')
         await bot.load_extension('cogs.generalcog')
-        await bot.load_extension('cogs.economycog')
+        #await bot.load_extension('cogs.textanalysiscog')
+        #await bot.load_extension('cogs.economycog')
         await bot.start(TOKEN)
 
 asyncio.run(main())

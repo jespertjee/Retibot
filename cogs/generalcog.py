@@ -5,6 +5,7 @@ import numpy as np
 import datetime
 import data_analysis
 import importlib
+from currency_converter import ECB_URL, SINGLE_DAY_ECB_URL, CurrencyConverter
 import re
 
 utc = datetime.timezone.utc
@@ -16,6 +17,7 @@ class GeneralCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.update_messages.start()
+        self.c = CurrencyConverter(SINGLE_DAY_ECB_URL)
 
     def cog_unload(self):
         self.update_messages.cancel()
@@ -111,6 +113,20 @@ class GeneralCog(commands.Cog):
                 "Maximum message size reached, please reduce either the number of sides or the number of times")
 
 
+    @commands.command(name='currency', help='Currency conversion rate')
+    async def currency(self, ctx, *, arg):
+        argument = arg.split(' ')
+        currency1 = argument[0]
+        currency2 = argument[1]
+        # If there is a number, we will use that to convert
+        if len(argument)>2:
+            amount = argument[2]
+        else:
+            amount = 1
+        try:
+            await ctx.send(f"{amount} {currency1} is equal to {self.c.convert(amount, currency1, currency2):.2f} {currency2}")
+        except:
+            await ctx.send("Conversion not successful, are you sure both currencies are valid?")
 
 
     @commands.Cog.listener()
