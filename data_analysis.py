@@ -7,6 +7,20 @@ import datetime
 # Variables
 # How many days the rolling windows should be
 rolling_window_days = 90
+# Users to use in plots
+use_names = [
+"aldebaran#4477",
+"generalmelchett",
+"jespertjee",
+"thethymos",
+"virtualhummingbird",
+"maxi_we",
+"1tsclassified",
+"versatilespice",
+"spocklan116",
+"kalmoire",
+"sigismundaugustus6042"
+]
 
 # Loading the data TODO: there must be a better way to do this instead of just loading it like this
 print("loaded Retihom.csv")
@@ -120,8 +134,9 @@ def plot_messages(filedata, plot_name):
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(data.index.size)]
     for column in sortednames:
-        number = str(int(data[column][-1]))
-        frame.plot(days, data[column], label=(column + f': {number} messages'))
+        if column in use_names:
+            number = str(int(data[column][-1]))
+            frame.plot(days, data[column], label=(column + f': {number} messages'))
     frame.set_ylim(bottom=0)
     frame.grid()
     frame.set_ylabel("Messages")
@@ -147,8 +162,9 @@ def plot_words(filedata, plot_name):
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(data.index.size)]
     for column in sortednames:
-        number = str(int(data[column][-1]))
-        frame.plot(days, data[column], label=(column + f': {number} words'))
+        if column in use_names:
+            number = str(int(data[column][-1]))
+            frame.plot(days, data[column], label=(column + f': {number} words'))
     frame.set_ylim(bottom=0)
     frame.grid()
     frame.set_ylabel("Words")
@@ -175,8 +191,9 @@ def plot_filter_words(filedata, plot_name, filterwords, filterword_query):
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(data.index.size)]
     for name in sortednames:
-        number = str(int(data[name][-1]))
-        frame.plot(days, data[name], label=(name + f': {number} times said'))
+        if name in use_names:
+            number = str(int(data[name][-1]))
+            frame.plot(days, data[name], label=(name + f': {number} times said'))
 
     frame.set_ylim(bottom=0)
     frame.grid()
@@ -206,15 +223,16 @@ def plot_relative_filter_words(filedata, plot_name, filterwords, filterword_quer
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(fraction.index.size)]
     for name in sortednames:
-        # Transforming values to log, except if they are 0
-        number = float(fraction[name][-1])
-        # Check if number is equal to 0
-        if number == 0:
-            frame.plot(days, fraction[name], label=(name + r': final fraction: 0'))
-        else:
-            lognumber = str(round(np.log10(number), 2))
-            text = name + r' Final fraction: $10^{' + lognumber + r'}$'
-            frame.plot(days, fraction[name], label=text)
+        if name in use_names:
+            # Transforming values to log, except if they are 0
+            number = float(fraction[name][-1])
+            # Check if number is equal to 0
+            if number == 0:
+                frame.plot(days, fraction[name], label=(name + r': final fraction: 0'))
+            else:
+                lognumber = str(round(np.log10(number), 2))
+                text = name + r' Final fraction: $10^{' + lognumber + r'}$'
+                frame.plot(days, fraction[name], label=text)
     frame.set_yscale('log')
     frame.grid()
     frame.set_ylabel("Fraction of words")
@@ -274,7 +292,8 @@ def plot_relative_filter_words_week(filedata, plot_name, filterwords, filterword
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(fraction.index.size)]
     for name in sortednames:
-        frame.plot(days, fraction[name], label=name[1])
+        if name[1] in use_names:
+            frame.plot(days, fraction[name], label=name[1])
     frame.grid()
     frame.set_ylabel("Fraction of words")
     frame.set_xlabel("Date")
@@ -308,7 +327,8 @@ def plot_absolute_filter_words_week(filedata, plot_name, filterwords, filterword
     days = [(pd.to_datetime(filedata['Date'][0], format="%d/%m/%Y") + datetime.timedelta(days=i)) for i in
             range(data.index.size)]
     for name in sortednames:
-        frame.plot(days, data[name], label=name[1])
+        if name[1] in use_names:
+            frame.plot(days, data[name], label=name[1])
     frame.grid()
     frame.set_ylabel("Count of words")
     frame.set_xlabel("Date")
