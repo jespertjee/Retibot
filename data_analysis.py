@@ -9,8 +9,8 @@ import datetime
 rolling_window_days = 90
 # Users to use in plots
 use_names = [
-"aldebaran#4477",
-"generalmelchett",
+"aldebaran4477",
+"lyndonbernjohnson",
 "jespertjee",
 "thethymos",
 "virtualhummingbird",
