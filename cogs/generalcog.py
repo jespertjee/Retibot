@@ -134,9 +134,6 @@ class GeneralCog(commands.Cog):
         # Check that the bot isn't replying to itself
         if ctx.author.bot:
             return
-        # Reposting wrong twitter links
-        if ctx.embeds:
-            pass
         else:
             message_split = ctx.content.split()
             for message in message_split:
